@@ -1,0 +1,200 @@
+"use client";
+
+import { useLayoutEffect, useRef, useState } from "react";
+import * as am5 from "@amcharts/amcharts5";
+import * as am5map from "@amcharts/amcharts5/map";
+import am5geodata_worldHigh from "@amcharts/amcharts5-geodata/worldHigh";
+
+const southAmericanCountries = [
+  "CO", "EC", "PE", "BO", "CL", "AR", "UY", "PY", "BR", "SR", "GY", "VE", "GF", "FK"
+];
+
+const countryNames: { [key: string]: string[] } = {
+  CO: ["Colombia", "Columbia"],
+  EC: ["Ecuador"],
+  PE: ["Peru"],
+  BO: ["Bolivia"],
+  CL: ["Chile"],
+  AR: ["Argentina"],
+  UY: ["Uruguay"],
+  PY: ["Paraguay"],
+  BR: ["Brazil"],
+  SR: ["Suriname"],
+  GY: ["Guyana"],
+  VE: ["Venezuela"],
+  GF: ["French Guiana", "French Guyana"],
+  FK: ["Falkland Islands", "Falklands"]
+};
+
+function normalizeString(str: string): string {
+  return str.toLowerCase().replace(/[^a-z]/g, '');
+}
+
+function isCloseMatch(input: string, target: string): boolean {
+  const normInput = normalizeString(input);
+  const normTarget = normalizeString(target);
+  if (normInput === normTarget) return true;
+  // Allow one character difference for minor typos
+  if (Math.abs(normInput.length - normTarget.length) <= 1) {
+    let diffCount = 0;
+    for (let i = 0; i < Math.max(normInput.length, normTarget.length); i++) {
+      if (normInput[i] !== normTarget[i]) diffCount++;
+      if (diffCount > 1) return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+export default function VenosPage() {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [currentCountry, setCurrentCountry] = useState<string | null>(null);
+  const [revealedIndices, setRevealedIndices] = useState<Set<number>>(new Set());
+  const [inputValue, setInputValue] = useState("");
+  const [completedCountries, setCompletedCountries] = useState<Set<string>>(new Set());
+
+  useLayoutEffect(() => {
+    if (!chartRef.current) return;
+
+    const root = am5.Root.new(chartRef.current);
+
+    const chart = root.container.children.push(
+      am5map.MapChart.new(root, {
+        projection: am5map.geoMercator(),
+        panX: "rotateX",
+        rotationX: -60
+      })
+    );
+
+    chart.set("background", am5.Rectangle.new(root, {
+      fill: am5.color(0x1a1a1a)
+    }));
+
+    const polygonSeries = chart.series.push(
+      am5map.MapPolygonSeries.new(root, {
+        geoJSON: am5geodata_worldHigh,
+        include: southAmericanCountries
+      })
+    );
+
+    polygonSeries.mapPolygons.template.setAll({
+      fill: am5.color(0x8B4513), // Saddle brown
+      stroke: am5.color(0x333333),
+      strokeWidth: 1
+    });
+
+    polygonSeries.mapPolygons.template.states.create("hover", {
+      fill: am5.color(0x4682B4) // Steel blue on hover
+    });
+
+    polygonSeries.mapPolygons.template.events.on("click", (ev) => {
+      const dataItem = ev.target.dataItem;
+      if (dataItem) {
+        const id = (dataItem.dataContext as { id: string }).id;
+        if (completedCountries.has(id)) return;
+        setCurrentCountry(id);
+        setRevealedIndices(new Set());
+        setInputValue("");
+      }
+    });
+
+    // Update colors based on completion
+    polygonSeries.mapPolygons.template.adapters.add("fill", (fill, target) => {
+      const dataItem = target.dataItem;
+      if (dataItem) {
+        const id = (dataItem.dataContext as { id: string }).id;
+        if (completedCountries.has(id)) {
+          return am5.color(0x006400); // Dark green
+        }
+      }
+      return fill;
+    });
+
+    return () => {
+      root.dispose();
+    };
+  }, [completedCountries]);
+
+  const handleSubmit = () => {
+    if (!currentCountry) return;
+
+    const acceptedNames = countryNames[currentCountry] || [];
+    const isCorrect = acceptedNames.some(name => isCloseMatch(inputValue, name));
+
+    if (isCorrect) {
+      setCompletedCountries(prev => new Set([...prev, currentCountry]));
+      setCurrentCountry(null);
+      setRevealedIndices(new Set());
+      setInputValue("");
+    } else {
+      const correctName = acceptedNames[0] || "";
+      const letterIndices = [];
+      for (let i = 0; i < correctName.length; i++) {
+        if (correctName[i] !== " ") letterIndices.push(i);
+      }
+      const unrevealed = letterIndices.filter(i => !revealedIndices.has(i));
+      if (unrevealed.length > 0) {
+        const randomIndex = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+        setRevealedIndices(prev => new Set([...prev, randomIndex]));
+      } else {
+        // Fully revealed, mark as completed
+        setCompletedCountries(prev => new Set([...prev, currentCountry]));
+        setCurrentCountry(null);
+        setRevealedIndices(new Set());
+        setInputValue("");
+      }
+    }
+  };
+
+  const getDisplayText = () => {
+    if (!currentCountry) return "";
+    const correctName = countryNames[currentCountry]?.[0] || "";
+    let display = "";
+    for (let i = 0; i < correctName.length; i++) {
+      if (revealedIndices.has(i)) {
+        display += correctName[i];
+      } else {
+        display += " ";
+      }
+    }
+    return display;
+  };
+
+  return (
+    <div className="relative w-full h-screen">
+      <div id="chartdiv" ref={chartRef} style={{ width: "100%", height: "100%" }}></div>
+      {currentCountry && (
+        <div className="fixed inset-0 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+            <p className="mb-4 text-lg">What is the name of this country?</p>
+            <p className="mb-4 font-mono text-xl">{getDisplayText()}</p>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+              className="border p-2 w-full mb-4"
+              placeholder="Type the country name"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button onClick={handleSubmit} className="bg-blue-500 text-white px-4 py-2 rounded flex-1">
+                Submit
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentCountry(null);
+                  setRevealedIndices(new Set());
+                  setInputValue("");
+                }}
+                className="bg-gray-500 text-white px-4 py-2 rounded flex-1"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
