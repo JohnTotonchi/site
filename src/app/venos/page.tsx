@@ -1,9 +1,6 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
-import * as am5 from "@amcharts/amcharts5";
-import * as am5map from "@amcharts/amcharts5/map";
-import am5geodata_worldHigh from "@amcharts/amcharts5-geodata/worldHigh";
 
 const southAmericanCountries = [
   "CO", "EC", "PE", "BO", "CL", "AR", "UY", "PY", "BR", "SR", "GY", "VE", "GF", "FK"
@@ -56,63 +53,71 @@ export default function VenosPage() {
   useLayoutEffect(() => {
     if (!chartRef.current) return;
 
-    const root = am5.Root.new(chartRef.current);
+    const loadChart = async () => {
+      const am5 = await import("@amcharts/amcharts5");
+      const am5map = await import("@amcharts/amcharts5/map");
+      const am5geodata = await import("@amcharts/amcharts5-geodata/worldHigh");
 
-    const chart = root.container.children.push(
-      am5map.MapChart.new(root, {
-        projection: am5map.geoMercator(),
-        panX: "rotateX",
-        rotationX: -60
-      })
-    );
+      const root = am5.Root.new(chartRef.current!);
 
-    chart.set("background", am5.Rectangle.new(root, {
-      fill: am5.color(0x1a1a1a)
-    }));
+      const chart = root.container.children.push(
+        am5map.MapChart.new(root, {
+          projection: am5map.geoMercator(),
+          panX: "rotateX",
+          rotationX: -60
+        })
+      );
 
-    const polygonSeries = chart.series.push(
-      am5map.MapPolygonSeries.new(root, {
-        geoJSON: am5geodata_worldHigh,
-        include: southAmericanCountries
-      })
-    );
+      chart.set("background", am5.Rectangle.new(root, {
+        fill: am5.color(0x1a1a1a)
+      }));
 
-    polygonSeries.mapPolygons.template.setAll({
-      fill: am5.color(0x8B4513), // Saddle brown
-      stroke: am5.color(0x333333),
-      strokeWidth: 1
-    });
+      const polygonSeries = chart.series.push(
+        am5map.MapPolygonSeries.new(root, {
+          geoJSON: am5geodata.default,
+          include: southAmericanCountries
+        })
+      );
 
-    polygonSeries.mapPolygons.template.states.create("hover", {
-      fill: am5.color(0x4682B4) // Steel blue on hover
-    });
+      polygonSeries.mapPolygons.template.setAll({
+        fill: am5.color(0x8B4513), // Saddle brown
+        stroke: am5.color(0x333333),
+        strokeWidth: 1
+      });
 
-    polygonSeries.mapPolygons.template.events.on("click", (ev) => {
-      const dataItem = ev.target.dataItem;
-      if (dataItem) {
-        const id = (dataItem.dataContext as { id: string }).id;
-        if (completedCountries.has(id)) return;
-        setCurrentCountry(id);
-        setRevealedIndices(new Set());
-        setInputValue("");
-      }
-    });
+      polygonSeries.mapPolygons.template.states.create("hover", {
+        fill: am5.color(0x4682B4) // Steel blue on hover
+      });
 
-    // Update colors based on completion
-    polygonSeries.mapPolygons.template.adapters.add("fill", (fill, target) => {
-      const dataItem = target.dataItem;
-      if (dataItem) {
-        const id = (dataItem.dataContext as { id: string }).id;
-        if (completedCountries.has(id)) {
-          return am5.color(0x006400); // Dark green
+      polygonSeries.mapPolygons.template.events.on("click", (ev) => {
+        const dataItem = ev.target.dataItem;
+        if (dataItem) {
+          const id = (dataItem.dataContext as { id: string }).id;
+          if (completedCountries.has(id)) return;
+          setCurrentCountry(id);
+          setRevealedIndices(new Set());
+          setInputValue("");
         }
-      }
-      return fill;
-    });
+      });
 
-    return () => {
-      root.dispose();
+      // Update colors based on completion
+      polygonSeries.mapPolygons.template.adapters.add("fill", (fill, target) => {
+        const dataItem = target.dataItem;
+        if (dataItem) {
+          const id = (dataItem.dataContext as { id: string }).id;
+          if (completedCountries.has(id)) {
+            return am5.color(0x006400); // Dark green
+          }
+        }
+        return fill;
+      });
+
+      return () => {
+        root.dispose();
+      };
     };
+
+    loadChart();
   }, [completedCountries]);
 
   const handleSubmit = () => {
