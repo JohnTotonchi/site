@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
+import { useTheme } from "next-themes";
 
 const southAmericanCountries = [
   "CO", "EC", "PE", "BO", "CL", "AR", "UY", "PY", "BR", "SR", "GY", "VE", "GF", "FK"
@@ -50,6 +51,7 @@ export default function VenosPage() {
   const [revealedIndices, setRevealedIndices] = useState<Set<number>>(new Set());
   const [inputValue, setInputValue] = useState("");
   const [completedCountries, setCompletedCountries] = useState<Set<string>>(new Set());
+  const { theme } = useTheme();
 
   useLayoutEffect(() => {
     if (!chartRef.current) return;
@@ -76,8 +78,10 @@ export default function VenosPage() {
         })
       );
 
+      // Set background color based on theme
+      const backgroundColor = theme === 'dark' ? 0x1a1a1a : 0xf5f5f5;
       chart.set("background", am5.Rectangle.new(root, {
-        fill: am5.color(0x1a1a1a)
+        fill: am5.color(backgroundColor)
       }));
 
       const polygonSeries = chart.series.push(
@@ -87,14 +91,19 @@ export default function VenosPage() {
         })
       );
 
+      // Set map colors based on theme
+      const defaultFill = theme === 'dark' ? 0x8B4513 : 0xD2691E; // Saddle brown for dark, chocolate for light
+      const strokeColor = theme === 'dark' ? 0x333333 : 0x666666;
+      const hoverColor = theme === 'dark' ? 0x4682B4 : 0x1E90FF; // Steel blue for dark, dodger blue for light
+
       polygonSeries.mapPolygons.template.setAll({
-        fill: am5.color(0x8B4513), // Saddle brown
-        stroke: am5.color(0x333333),
+        fill: am5.color(defaultFill),
+        stroke: am5.color(strokeColor),
         strokeWidth: 1
       });
 
       polygonSeries.mapPolygons.template.states.create("hover", {
-        fill: am5.color(0x4682B4) // Steel blue on hover
+        fill: am5.color(hoverColor)
       });
 
       polygonSeries.mapPolygons.template.events.on("click", (ev: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -130,7 +139,7 @@ export default function VenosPage() {
         rootRef.current = null;
       }
     };
-  }, [completedCountries]); // Add completedCountries dependency
+  }, [completedCountries, theme]); // Add completedCountries and theme dependencies
 
   const handleSubmit = () => {
     if (!currentCountry) return;
@@ -181,8 +190,12 @@ export default function VenosPage() {
     <div className="relative w-full h-screen">
       <div id="chartdiv" ref={chartRef} style={{ width: "100%", height: "100%" }}></div>
       {currentCountry && (
-        <div className="fixed inset-0 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className={`p-6 rounded-lg shadow-lg max-w-md w-full mx-4 ${
+            theme === 'dark'
+              ? 'bg-gray-800 text-white border border-gray-700'
+              : 'bg-white text-gray-900'
+          }`}>
             <p className="mb-4 text-lg">What is the name of this country?</p>
             <p className="mb-4 font-mono text-xl">{getDisplayText()}</p>
             <input
@@ -190,12 +203,16 @@ export default function VenosPage() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-              className="border p-2 w-full mb-4"
+              className={`border p-2 w-full mb-4 rounded ${
+                theme === 'dark'
+                  ? 'bg-gray-700 text-white border-gray-600'
+                  : 'bg-white text-gray-900 border-gray-300'
+              }`}
               placeholder="Type the country name"
               autoFocus
             />
             <div className="flex gap-2">
-              <button onClick={handleSubmit} className="bg-blue-500 text-white px-4 py-2 rounded flex-1">
+              <button onClick={handleSubmit} className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex-1 transition-colors">
                 Submit
               </button>
               <button
@@ -204,7 +221,11 @@ export default function VenosPage() {
                   setRevealedIndices(new Set());
                   setInputValue("");
                 }}
-                className="bg-gray-500 text-white px-4 py-2 rounded flex-1"
+                className={`px-4 py-2 rounded flex-1 transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-gray-600 hover:bg-gray-500 text-white'
+                    : 'bg-gray-500 hover:bg-gray-600 text-white'
+                }`}
               >
                 Cancel
               </button>
