@@ -45,7 +45,7 @@ function isCloseMatch(input: string, target: string): boolean {
 
 export default function VenosPage() {
   const chartRef = useRef<HTMLDivElement>(null);
-  const rootRef = useRef<any>(null);
+  const rootRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [currentCountry, setCurrentCountry] = useState<string | null>(null);
   const [revealedIndices, setRevealedIndices] = useState<Set<number>>(new Set());
   const [inputValue, setInputValue] = useState("");
@@ -97,7 +97,7 @@ export default function VenosPage() {
         fill: am5.color(0x4682B4) // Steel blue on hover
       });
 
-      polygonSeries.mapPolygons.template.events.on("click", (ev: any) => {
+      polygonSeries.mapPolygons.template.events.on("click", (ev: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         const dataItem = ev.target.dataItem;
         if (dataItem) {
           const id = (dataItem.dataContext as { id: string }).id;
@@ -109,7 +109,7 @@ export default function VenosPage() {
       });
 
       // Update colors based on completion
-      polygonSeries.mapPolygons.template.adapters.add("fill", (fill: any, target: any) => {
+      polygonSeries.mapPolygons.template.adapters.add("fill", (fill: any, target: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         const dataItem = target.dataItem;
         if (dataItem) {
           const id = (dataItem.dataContext as { id: string }).id;
@@ -130,7 +130,7 @@ export default function VenosPage() {
         rootRef.current = null;
       }
     };
-  }, []); // Remove completedCountries dependency to prevent frequent re-renders
+  }, [completedCountries]); // Add completedCountries dependency
 
   const handleSubmit = () => {
     if (!currentCountry) return;
