@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { parse } from 'rss-to-json';
 
 interface MenuItem {
   title: string;
@@ -13,21 +15,22 @@ export default function Lunch() {
   const [todayMenu, setTodayMenu] = useState<string[]>([]);
   const [tomorrowMenu, setTomorrowMenu] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarMenus, setCalendarMenus] = useState<{[key: string]: string[]}>({});
 
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        const url = "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fbrrice.tandem.co%2Findex.php%3Ftype%3Dexport%26action%3Drss%26export_type%3Dmenus";
-        const response = await fetch(url);
-        const jsonData = await response.json();
+        const rssUrl = "https://brrice.tandem.co/index.php?type=export&action=rss&export_type=menus";
+        const rss = await parse(rssUrl);
 
-        if (jsonData.items && Array.isArray(jsonData.items)) {
+        if (rss.items && Array.isArray(rss.items)) {
           const today = new Date();
           const tomorrow = new Date();
           tomorrow.setDate(tomorrow.getDate() + 1);
 
-          const todayItems = getMenuItems(jsonData.items, today);
-          const tomorrowItems = getMenuItems(jsonData.items, tomorrow);
+          const todayItems = getMenuItems(rss.items, today);
+          const tomorrowItems = getMenuItems(rss.items, tomorrow);
 
           setTodayMenu(todayItems);
           setTomorrowMenu(tomorrowItems);
@@ -67,6 +70,64 @@ export default function Lunch() {
     return matchingItems.length > 0 ? matchingItems : ['No menu items found.'];
   };
 
+  const generateCalendarData = () => {
+    const calendarData: {[key: string]: {date: Date, dayName: string, month: number, dayOfMonth: number}} = {};
+    const today = new Date();
+
+    // Generate next 14 days (2 weeks)
+    for (let i = 0; i < 14; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      const key = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+      calendarData[key] = {
+        date,
+        dayName: dayNames[date.getDay()],
+        month: date.getMonth(),
+        dayOfMonth: date.getDate()
+      };
+    }
+
+    return calendarData;
+  };
+
+  const loadCalendarMenus = async () => {
+    if (Object.keys(calendarMenus).length > 0) return; // Already loaded
+
+    try {
+      const rssUrl = "https://brrice.tandem.co/index.php?type=export&action=rss&export_type=menus";
+      const rss = await parse(rssUrl);
+
+      if (rss.items && Array.isArray(rss.items)) {
+        const calendarData = generateCalendarData();
+        const menus: {[key: string]: string[]} = {};
+
+        Object.keys(calendarData).forEach(key => {
+          menus[key] = getMenuItems(rss.items, calendarData[key].date);
+        });
+
+        setCalendarMenus(menus);
+      }
+    } catch (error) {
+      console.error('Error loading calendar menus:', error);
+    }
+  };
+
+  const formatDate = (date: Date): string => {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    const day = date.getDate();
+    const ordinal = day === 1 || day === 21 || day === 31 ? 'st' :
+                   day === 2 || day === 22 ? 'nd' :
+                   day === 3 || day === 23 ? 'rd' : 'th';
+
+    return `${dayNames[date.getDay()]}, ${monthNames[date.getMonth()]} ${day}${ordinal}`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -78,10 +139,11 @@ export default function Lunch() {
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-2xl mx-auto">
-        <div className="mb-8 text-center">
+        <div className="mb-8 flex justify-between items-center">
           <Link href="/">
             <Button variant="outline">Return to Home</Button>
           </Link>
+          <ThemeToggle />
         </div>
 
         <Card className="mb-8">
@@ -97,7 +159,7 @@ export default function Lunch() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-center text-3xl">Tomorrow's Lunch is:</CardTitle>
           </CardHeader>
@@ -109,6 +171,58 @@ export default function Lunch() {
             </ul>
           </CardContent>
         </Card>
+
+        <div className="mb-8 text-center">
+          <Button
+            onClick={async () => {
+              setShowCalendar(!showCalendar);
+              if (!showCalendar) {
+                await loadCalendarMenus();
+              }
+            }}
+            variant="outline"
+          >
+            {showCalendar ? 'Hide' : 'Show'} Lunch Calendar
+          </Button>
+        </div>
+
+        {showCalendar && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center text-2xl">Upcoming Lunches</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(() => {
+                  const calendarData = generateCalendarData();
+                  return Object.entries(calendarMenus).map(([dateKey, menuItems]) => {
+                    const today = new Date();
+                    const menuDate = calendarData[dateKey]?.date || new Date(dateKey + 'T00:00:00');
+                    const isToday = menuDate.toDateString() === today.toDateString();
+                    const isTomorrow = menuDate.toDateString() === new Date(today.getTime() + 24 * 60 * 60 * 1000).toDateString();
+
+                    if (isToday || isTomorrow) return null; // Skip today and tomorrow as they're shown above
+
+                    return (
+                      <div key={dateKey} className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                        <h3 className="font-semibold text-lg mb-2 dark:text-gray-100">
+                          {formatDate(menuDate)}
+                        </h3>
+                        <ul className="text-sm space-y-1">
+                          {menuItems.map((item, index) => (
+                            <li key={index} className="text-gray-700 dark:text-gray-300">
+                              {item === 'No menu items found.' ? 'No school' : item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
