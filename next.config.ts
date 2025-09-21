@@ -1,12 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Fix for routesManifest.dataRoutes error
-  serverExternalPackages: [],
-  // Ensure proper handling of routes
-  async rewrites() {
-    return [];
-  },
+  // Configuration options here
 };
 
 export default nextConfig;

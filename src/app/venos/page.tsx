@@ -137,6 +137,7 @@ export default function VenosPage() {
       // Set up label bullets
       const labelFill = theme === 'dark' ? 0xffffff : 0x000000;
       pointSeries.bullets.push(function(root, series, dataItem) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const name = (dataItem as any).get("name") || "";
         return am5.Bullet.new(root, {
           sprite: am5.Label.new(root, {
@@ -159,11 +160,13 @@ export default function VenosPage() {
         series.mapPolygons.each(function(polygon) {
           const dataItem = polygon.dataItem;
           if (dataItem) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const id = (dataItem as any).get("id");
             if (completedCountries.has(id)) {
               pointSeries.pushDataItem({
                 polygonId: id,
                 name: countryNames[id]?.[0] || id
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
               } as any);
             }
           }
