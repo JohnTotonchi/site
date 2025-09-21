@@ -128,6 +128,47 @@ export default function VenosPage() {
         }
         return fill;
       });
+
+      // Create point series for labels on completed countries
+      const pointSeries = chart.series.push(
+        am5map.MapPointSeries.new(root, {})
+      );
+
+      // Set up label bullets
+      const labelFill = theme === 'dark' ? 0xffffff : 0x000000;
+      pointSeries.bullets.push(function(root, series, dataItem) {
+        const name = (dataItem as any).get("name") || "";
+        return am5.Bullet.new(root, {
+          sprite: am5.Label.new(root, {
+            text: name,
+            centerX: am5.p50,
+            centerY: am5.p50,
+            fontSize: 12,
+            fill: am5.color(labelFill),
+            fontWeight: "bold"
+          })
+        });
+      });
+
+      // Add labels for completed countries
+      polygonSeries.events.on("datavalidated", function(ev) {
+        const series = ev.target;
+        // Clear existing data
+        pointSeries.data.clear();
+
+        series.mapPolygons.each(function(polygon) {
+          const dataItem = polygon.dataItem;
+          if (dataItem) {
+            const id = (dataItem as any).get("id");
+            if (completedCountries.has(id)) {
+              pointSeries.pushDataItem({
+                polygonId: id,
+                name: countryNames[id]?.[0] || id
+              } as any);
+            }
+          }
+        });
+      });
     };
 
     loadChart();
