@@ -74,7 +74,8 @@ export default function VenosPage() {
         am5map.MapChart.new(root, {
           projection: am5map.geoMercator(),
           panX: "rotateX",
-          rotationX: -60
+          rotationX: -60,
+          zoomStep: 1.025
         })
       );
 
