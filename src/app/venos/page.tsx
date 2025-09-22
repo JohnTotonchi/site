@@ -75,7 +75,7 @@ export default function VenosPage() {
           projection: am5map.geoMercator(),
           panX: "rotateX",
           rotationX: -60,
-          zoomStep: 1.02
+          zoomStep: 1.025
         })
       );
 
