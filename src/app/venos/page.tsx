@@ -51,7 +51,15 @@ export default function VenosPage() {
   const [revealedIndices, setRevealedIndices] = useState<Set<number>>(new Set());
   const [inputValue, setInputValue] = useState("");
   const [completedCountries, setCompletedCountries] = useState<Set<string>>(new Set());
-  const { theme } = useTheme();
+  const { setTheme } = useTheme();
+
+  // Force dark mode for this page
+  useLayoutEffect(() => {
+    setTheme('dark');
+  }, [setTheme]);
+
+  // Use dark theme for all styling
+  const theme = 'dark';
 
   useLayoutEffect(() => {
     if (!chartRef.current) return;

@@ -8,6 +8,14 @@ export default function Home() {
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
+
+      {/* PWA Install Notice */}
+      <div className="fixed top-2 left-1/2 transform -translate-x-1/2 z-50">
+        <div className="bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded text-center border border-white/10">
+          add to homescreen for a better experience.
+        </div>
+      </div>
+
       <h1 className="text-4xl font-bold mb-4">j a w n . h o s t</h1>
       <p className="text-lg mb-8">made by totonchi</p>
       <div className="flex gap-4">

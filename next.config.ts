@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Configuration options here
+  // Remove problematic configs for now
+  experimental: {
+    // Disable features that might cause the routesManifest error
+  }
 };
 
 export default nextConfig;
