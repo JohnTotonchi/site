@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Particles } from '@/components/magicui/particles';
 import { parse } from 'rss-to-json';
 
 interface MenuItem {
@@ -137,8 +138,15 @@ export default function Lunch() {
   }
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen p-8 relative">
+      <Particles
+        className="absolute inset-0"
+        quantity={40}
+        ease={70}
+        color="#4ecdc4"
+        refresh={false}
+      />
+      <div className="max-w-2xl mx-auto relative z-10">
         <div className="mb-8 flex justify-between items-center">
           <Link href="/">
             <Button variant="outline">Return to Home</Button>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { SlidingNumber } from '@/components/ui/sliding-number';
+import { Particles } from '@/components/magicui/particles';
 
 export default function ClockPage() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -14,12 +15,26 @@ export default function ClockPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Convert 24-hour to 12-hour format
+  const get12HourFormat = (hour: number): number => {
+    if (hour === 0) return 12;
+    if (hour <= 12) return hour;
+    return hour - 12;
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-background relative">
+      <Particles
+        className="absolute inset-0"
+        quantity={30}
+        ease={60}
+        color="#ff6b6b"
+        refresh={false}
+      />
       <div className="text-center">
         <div className="text-9xl font-mono select-none">
           <div className="flex items-center justify-center gap-2">
-            <SlidingNumber value={currentTime.getHours()} padStart={true} />
+            <SlidingNumber value={get12HourFormat(currentTime.getHours())} padStart={true} />
             <span className="text-muted-foreground animate-pulse">:</span>
             <SlidingNumber value={currentTime.getMinutes()} padStart={true} />
             <span className="text-muted-foreground animate-pulse">:</span>

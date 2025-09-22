@@ -1,10 +1,18 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Particles } from "@/components/magicui/particles";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 relative">
+      <Particles
+        className="absolute inset-0"
+        quantity={50}
+        ease={80}
+        color="#64ffda"
+        refresh={false}
+      />
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
