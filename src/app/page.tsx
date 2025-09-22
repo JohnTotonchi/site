@@ -18,12 +18,15 @@ export default function Home() {
 
       <h1 className="text-4xl font-bold mb-4">j a w n . h o s t</h1>
       <p className="text-lg mb-8">made by totonchi</p>
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-wrap justify-center">
         <Link href="/lunch">
           <Button size="lg">What's for lunch?</Button>
         </Link>
         <Link href="/venos">
           <Button size="lg">Study for Venos</Button>
+        </Link>
+        <Link href="/clock">
+          <Button size="lg">Board Clock</Button>
         </Link>
       </div>
     </div>

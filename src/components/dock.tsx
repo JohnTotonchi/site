@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, UtensilsCrossed, Globe, HamburgerIcon } from "lucide-react";
+import { Home, UtensilsCrossed, Globe, HamburgerIcon, Clock } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
@@ -50,6 +50,12 @@ const dockItems: DockItem[] = [
     icon: Globe,
     label: "venos",
     name: "Venos"
+  },
+  {
+    href: "/clock",
+    icon: Clock,
+    label: "clock",
+    name: "Board Clock"
   }
 ];
 
