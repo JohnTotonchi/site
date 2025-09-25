@@ -13,6 +13,7 @@ export default function Home() {
         color="#64ffda"
         refresh={false}
       />
+
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>

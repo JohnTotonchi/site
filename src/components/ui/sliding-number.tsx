@@ -16,43 +16,48 @@ const TRANSITION = {
   mass: 0.3,
 };
 
-function Digit({ value, place }: { value: number; place: number }) {
+function Digit({ value, place, showAll, maxValue }: { value: number; place: number; showAll?: boolean; maxValue?: number }) {
   const valueRoundedToPlace = Math.floor(value / place) % 10;
   const initial = motionValue(valueRoundedToPlace);
   const animatedValue = useSpring(initial, TRANSITION);
+  const maxDigit = place === 1 ? 9 : Math.floor((maxValue || 99) / place);
+  const numDigits = maxDigit + 1;
 
   useEffect(() => {
     animatedValue.set(valueRoundedToPlace);
   }, [animatedValue, valueRoundedToPlace]);
 
   return (
-    <div className='relative inline-block w-[1ch] overflow-x-visible overflow-y-clip leading-none tabular-nums'>
+    <div className={`relative inline-block w-[1ch] overflow-x-visible leading-none tabular-nums ${showAll ? '' : 'overflow-y-clip'}`}>
       <div className='invisible'>0</div>
-      {Array.from({ length: 10 }, (_, i) => (
-        <Number key={i} mv={animatedValue} number={i} />
+      {Array.from({ length: numDigits }, (_, i) => (
+        <Number key={i} mv={animatedValue} number={i} numDigits={numDigits} />
       ))}
     </div>
   );
 }
 
-function Number({ mv, number }: { mv: MotionValue<number>; number: number }) {
+function Number({ mv, number, numDigits }: { mv: MotionValue<number>; number: number; numDigits: number }) {
   const uniqueId = useId();
   const [ref, bounds] = useMeasure();
 
   const y = useTransform(mv, (latest) => {
     if (!bounds.height) return 0;
-    const placeValue = latest % 10;
-    const offset = (10 + number - placeValue) % 10;
-    let memo = offset * bounds.height;
-
-    if (offset > 5) {
-      memo -= 10 * bounds.height;
-    }
+    const placeValue = latest;
+    const offset = number - placeValue;
+    const memo = offset * bounds.height;
 
     return memo;
   });
 
+  const opacity = useTransform(mv, (latest) => {
+    const placeValue = latest;
+    const offset = number - placeValue;
+    return Math.max(0, 1 - Math.abs(offset) / 4);
+  });
+
   // don't render the animated number until we know the height
+
   if (!bounds.height) {
     return (
       <span ref={ref} className='invisible absolute'>
@@ -63,7 +68,7 @@ function Number({ mv, number }: { mv: MotionValue<number>; number: number }) {
 
   return (
     <motion.span
-      style={{ y }}
+      style={{ y, opacity }}
       layoutId={`${uniqueId}-${number}`}
       className='absolute inset-0 flex items-center justify-center'
       transition={TRANSITION}
@@ -78,12 +83,16 @@ type SlidingNumberProps = {
   value: number;
   padStart?: boolean;
   decimalSeparator?: string;
+  showAll?: boolean;
+  maxValue?: number;
 };
 
 export function SlidingNumber({
   value,
   padStart = false,
   decimalSeparator = '.',
+  showAll = false,
+  maxValue = 99,
 }: SlidingNumberProps) {
   const absValue = Math.abs(value);
   const [integerPart, decimalPart] = absValue.toString().split('.');
@@ -103,6 +112,8 @@ export function SlidingNumber({
           key={`pos-${integerPlaces[index]}`}
           value={integerValue}
           place={integerPlaces[index]}
+          showAll={showAll}
+          maxValue={maxValue}
         />
       ))}
       {decimalPart && (
@@ -113,6 +124,7 @@ export function SlidingNumber({
               key={`decimal-${index}`}
               value={parseInt(decimalPart, 10)}
               place={Math.pow(10, decimalPart.length - index - 1)}
+              showAll={showAll}
             />
           ))}
         </>
