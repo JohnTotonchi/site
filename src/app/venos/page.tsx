@@ -3,25 +3,31 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 
-const southAmericanCountries = [
-  "CO", "EC", "PE", "BO", "CL", "AR", "UY", "PY", "BR", "SR", "GY", "VE", "GF", "FK"
+const middleEastCountries = [
+  "TR", "SY", "LB", "IL", "JO", "IQ", "SA", "YE", "OM", "AE", "QA", "BH", "KW", "IR", "TM", "UZ", "KG", "TJ", "AF", "PK"
 ];
 
 const countryNames: { [key: string]: string[] } = {
-  CO: ["Colombia", "Columbia"],
-  EC: ["Ecuador"],
-  PE: ["Peru"],
-  BO: ["Bolivia"],
-  CL: ["Chile"],
-  AR: ["Argentina"],
-  UY: ["Uruguay"],
-  PY: ["Paraguay"],
-  BR: ["Brazil"],
-  SR: ["Suriname"],
-  GY: ["Guyana"],
-  VE: ["Venezuela"],
-  GF: ["French Guiana", "French Guyana"],
-  FK: ["Falkland Islands", "Falklands"]
+  TR: ["Turkey"],
+  SY: ["Syria"],
+  LB: ["Lebanon"],
+  IL: ["Israel"],
+  JO: ["Jordan"],
+  IQ: ["Iraq"],
+  SA: ["Saudi Arabia"],
+  YE: ["Yemen"],
+  OM: ["Oman"],
+  AE: ["United Arab Emirates", "UAE"],
+  QA: ["Qatar"],
+  BH: ["Bahrain"],
+  KW: ["Kuwait"],
+  IR: ["Iran"],
+  TM: ["Turkmenistan"],
+  UZ: ["Uzbekistan"],
+  KG: ["Kyrgyzstan"],
+  TJ: ["Tajikistan"],
+  AF: ["Afghanistan"],
+  PK: ["Pakistan"]
 };
 
 function normalizeString(str: string): string {
@@ -96,7 +102,7 @@ export default function VenosPage() {
       const polygonSeries = chart.series.push(
         am5map.MapPolygonSeries.new(root, {
           geoJSON: am5geodata.default,
-          include: southAmericanCountries
+          include: middleEastCountries
         })
       );
 
@@ -242,6 +248,9 @@ export default function VenosPage() {
   return (
     <div className="relative w-full h-screen">
       <div id="chartdiv" ref={chartRef} style={{ width: "100%", height: "100%" }}></div>
+      <div className="absolute top-4 left-4 text-white font-bold text-lg z-10">
+        {completedCountries.size}/20 Countries
+      </div>
       {currentCountry && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className={`p-6 rounded-lg shadow-lg max-w-md w-full mx-4 ${
