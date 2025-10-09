@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, UtensilsCrossed, Globe, HamburgerIcon, Clock } from "lucide-react";
+import { Home, UtensilsCrossed, Globe, HamburgerIcon, Clock, Car } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
@@ -38,6 +38,12 @@ const dockItems: DockItem[] = [
   },
   {
     type: "separator"
+  },
+  {
+    href: "/ride-the-bus",
+    icon: Car,
+    label: "ride the bus",
+    name: "Ride the Bus"
   },
   {
     href: "/lunch",
