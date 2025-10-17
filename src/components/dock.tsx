@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Globe, HamburgerIcon, Clock } from "lucide-react";
+import { Home, Globe, HamburgerIcon, Clock, QrCode } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
@@ -55,6 +55,12 @@ const dockItems: DockItem[] = [
     icon: Clock,
     label: "clock",
     name: "Board Clock"
+  },
+  {
+    href: "/qr-gen",
+    icon: QrCode,
+    label: "qr-gen",
+    name: "QR Generator"
   }
 ];
 
